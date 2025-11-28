@@ -102,15 +102,46 @@ export async function PostGithubEvent(): Promise<number | undefined> {
     case 'public':
       break
     case 'pull_request':
+    case 'pull_request_target': {
+      const pr = context.payload.pull_request
+      if (pr) {
+        const prNumber = pr.number ? `#${pr.number} ` : ''
+        const branchInfo =
+          pr.head?.ref || pr.base?.ref
+            ? `\n${pr.head?.ref || ''} -> ${pr.base?.ref || ''}`
+            : ''
+        etitle = `[PR ${prNumber}${pr.title}](${pr.html_url})${branchInfo}\n\n${pr.body || ''}`
+        status = context.payload.action || pr.state || 'updated'
+        detailurl = pr.html_url || ''
+      }
       break
-    case 'pull_request_comment':
+    }
+    case 'pull_request_comment': {
+      const pr = context.payload.pull_request
+      const comment = context.payload.comment
+      etitle = `[PR #${pr?.number || ''} ${pr?.title || ''}](${pr?.html_url || ''})\n\n${comment?.body || ''}`
+      status = context.payload.action || 'commented'
+      detailurl = comment?.html_url || pr?.html_url || ''
       break
-    case 'pull_request_review':
+    }
+    case 'pull_request_review': {
+      const pr = context.payload.pull_request
+      const review = context.payload.review
+      const reviewer = review?.user?.login || actor
+      const reviewBody = review?.body ? `\n\n${review.body}` : ''
+      etitle = `[PR #${pr?.number || ''} ${pr?.title || ''}](${pr?.html_url || ''})\nReview by ${reviewer}${reviewBody}`
+      status = review?.state || context.payload.action || 'reviewed'
+      detailurl = review?.html_url || pr?.html_url || ''
       break
-    case 'pull_request_review_comment':
+    }
+    case 'pull_request_review_comment': {
+      const pr = context.payload.pull_request
+      const comment = context.payload.comment
+      etitle = `[PR #${pr?.number || ''} ${pr?.title || ''}](${pr?.html_url || ''})\n\n${comment?.body || ''}`
+      status = context.payload.action || 'commented'
+      detailurl = comment?.html_url || pr?.html_url || ''
       break
-    case 'pull_request_target':
-      break
+    }
     case 'push': {
       const head_commit = context.payload['head_commit']
       console.log(context.payload['ref'])
