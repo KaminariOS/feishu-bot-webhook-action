@@ -44065,6 +44065,18 @@ async function PostGithubEvent() {
         case 'workflow_dispatch':
             break;
         case 'workflow_run':
+            if (github_1.context.payload.workflow_run) {
+                const run = github_1.context.payload.workflow_run;
+                const runName = run.name || 'workflow';
+                const branchInfo = run.head_branch ? ` @ ${run.head_branch}` : '';
+                const trigger = run.event ? ` (${run.event})` : '';
+                const attempt = run.run_attempt ? ` attempt ${run.run_attempt}` : '';
+                const summary = run.display_title || run.head_commit?.message || '';
+                etitle = `[${runName}](${run.html_url || ''})${branchInfo}${trigger}${attempt}\n${summary}`;
+                status =
+                    run.conclusion || run.status || github_1.context.payload.action || 'requested';
+                detailurl = run.html_url || '';
+            }
             break;
         default:
             break;

@@ -1754,4 +1754,45 @@ describe('events and actions', () => {
 
     expect(errorMock).not.toHaveBeenCalled()
   })
+
+  it('workflow run event', async () => {
+    const workflowRunEvent = {
+      action: 'completed',
+      workflow_run: {
+        id: 123456,
+        name: 'CI',
+        head_branch: 'main',
+        event: 'push',
+        status: 'completed',
+        conclusion: 'success',
+        run_attempt: 2,
+        display_title: 'Run tests',
+        html_url:
+          'https://github.com/junka/feishu-bot-webhook-action/actions/runs/123456',
+        head_commit: {
+          message: 'Update README'
+        }
+      },
+      repository: {
+        name: 'feishu-bot-webhook-action',
+        stargazers_count: 0,
+        html_url: 'https://github.com/junka/feishu-bot-webhook-action'
+      },
+      sender: {
+        login: 'junka'
+      }
+    }
+
+    jest.replaceProperty(context, 'payload', workflowRunEvent)
+    jest.replaceProperty(context, 'eventName', 'workflow_run')
+    jest.replaceProperty(context, 'actor', 'ci-bot')
+
+    const resp = await main.PostGithubEvent()
+    expect(runMock).toHaveReturned()
+    expect(resp).toEqual(200)
+    expect(debugMock).toHaveBeenNthCalledWith(1, 0)
+    expect(debugMock).toHaveBeenNthCalledWith(2, 'success')
+
+    expect(errorMock).not.toHaveBeenCalled()
+  })
 })

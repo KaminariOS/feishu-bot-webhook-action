@@ -192,6 +192,18 @@ export async function PostGithubEvent(): Promise<number | undefined> {
     case 'workflow_dispatch':
       break
     case 'workflow_run':
+      if (context.payload.workflow_run) {
+        const run = context.payload.workflow_run
+        const runName = run.name || 'workflow'
+        const branchInfo = run.head_branch ? ` @ ${run.head_branch}` : ''
+        const trigger = run.event ? ` (${run.event})` : ''
+        const attempt = run.run_attempt ? ` attempt ${run.run_attempt}` : ''
+        const summary = run.display_title || run.head_commit?.message || ''
+        etitle = `[${runName}](${run.html_url || ''})${branchInfo}${trigger}${attempt}\n${summary}`
+        status =
+          run.conclusion || run.status || context.payload.action || 'requested'
+        detailurl = run.html_url || ''
+      }
       break
     default:
       break
